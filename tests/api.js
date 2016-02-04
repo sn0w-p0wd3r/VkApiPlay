@@ -6,7 +6,7 @@ for (var i = 1; i <= 10; ++i) {
   api.call('users.get', {user_id: i}, {
     done: function(users) {
       var user = users[0];
-      console.log("#%s %s %s", user.id, user.first_name, user.last_name);
+      console.log("id%s: %s %s", user.id, user.first_name, user.last_name);
     },
     delay: i * 1000,
   });

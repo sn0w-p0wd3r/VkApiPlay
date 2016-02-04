@@ -18,6 +18,10 @@ var API_DELAY = 334;
 function Api(options) {
   options = options || {};
   this.token = options.token;
+  // Дополнительные параметры, которые добавляются к каждому запросу, например,
+  // {lang: 'en', https: 1} - возвращаем имена на английском и ссылки на
+  // изображения начинающиеся с https вместо http
+  this.extraParams = options.extraParams;
   this.version = options.version;
   this.delay = options.delay || API_DELAY;
 }
