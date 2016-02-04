@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "VkApiPlay",
+  "version": "0.1",
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "permissions": [
+    "tabs",
+    "<all_urls>"
+  ],
+  "icons": {
+    "16": "assets/images/icon16.png",
+    "48": "assets/images/icon48.png",
+    "128": "assets/images/icon128.png"
+  },
+  "browser_action": {
+    "name": "VkApiPlay",
+    "default_icon": "assets/images/icon128.png"
+  }
+}

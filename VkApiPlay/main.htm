@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <script src="/lib/common.js" charset="utf-8"></script>
+    <script src="/lib/http.js" charset="utf-8"></script>
+    <script src="/lib/eventemitter.js" charset="utf-8"></script>
+    <script src="/lib/errors.js" charset="utf-8"></script>
+    <script src="/lib/api.js" charset="utf-8"></script>
+    <script src="/lib/accesstoken.js" charset="utf-8"></script>
+    <script src="/lib/authentication.js" charset="utf-8"></script>
+    <script src="/lib/utils.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <header></header>
+    <main>
+      <!-- login layer -->
+      <div id="login_layer" class="layer" data-title="Авторизация Вконтакте">
+        <div class="pure-g">
+          <div id="login_wrapper" class="pure-u-1-3">
+            <form id="login_form" class="pure-form pure-form-stacked">
+              <fieldset>
+                <!-- <legend>Авторизация Вконтакте</legend> -->
+                <div id="login_error" class="error">
+                  <h4><i class="fa fa-warning"></i> Ошибка аутентификации</h4>
+                  <p id="login_error_message"></p>
+                </div>
+                <label for="login_username">Телефон или адрес электронной почты</label>
+                <input id="login_username" type="text" class="pure-u-1" required>
+
+                <label for="login_password">Пароль</label>
+                <input id="login_password" type="password" class="pure-u-1" required>
+
+                <div id="login_captcha_wrapper">
+                  <img id="login_captcha_image" class="captcha_image">
+
+                  <label for="login_captcha_code">Код с картинки</label>
+                  <input id="login_captcha_code" type="text" class="pure-u-1">
+                </div>
+
+                <div id="login_button_wrapper">
+                  <button id="login_button" class="pure-button">
+                    <i class="fa fa-sign-in"></i>
+                    Войти
+                  </button>
+                </div>
+              </fieldset>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- /login layer -->
+      <!-- main layer -->
+      <div id="main_layer" class="layer" data-title="Главная">
+      </div>
+      <!-- /main layer -->
+      <!-- captcha layer -->
+      <div id="captcha_layer" class="layer" data-title="Тест Тьюринга">
+        <div class="pure-g">
+          <div id="captcha_wrapper" class="pure-u-1-4">
+            <form id="captcha_form" class="pure-form pure-form-stacked">
+              <fieldset>
+                <img id="captcha_image" class="captcha_image">
+                <input id="captcha_code" type="text" class="pure-u-2"
+                  placeholder="Код с картинки">
+                <div id="captcha_buttons_wrapper">
+                  <a id="captcha_cancel_button" class="pure-button">Отмена</a>
+                  <button id="captcha_submit_button" class="pure-button">Отправить</button>
+                </div>
+              </fieldset>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- /captcha layer -->
+    </main>
+    <footer></footer>
+    <script src="/main.js" charset="utf-8"></script>
+  </body>
+</html>

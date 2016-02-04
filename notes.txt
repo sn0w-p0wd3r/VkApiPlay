@@ -1,0 +1,10 @@
+http://purecss.io/start/
+https://fortawesome.github.io/Font-Awesome/icons/
+
+With pure-g-r, your pure-u-* columns will collapse when viewport is < 768px.
+
+http://pure-css.ru/
+
+https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Functions/Arrow_functions
+
+https://developer.chrome.com/devtools/docs/console-api
