@@ -1,5 +1,3 @@
-var API_VERSION = 5.44;
-
 // Работа с DOM
 function $$(selector, element) {
   return (element || document).querySelectorAll(selector);
@@ -41,7 +39,7 @@ function showMain() {
 
 function logout() {
   localStorage.removeItem('access_token');
-  api.cancelAllRequests();
+  vk.cancelApiRequests();
   showLogin();
 }
 
@@ -52,17 +50,17 @@ each($$('.captcha_image'), function(img) {
   });
 });
 
-var options = {version: API_VERSION};
+var options = {};
 var serialized = localStorage.getItem('access_token');
 if (serialized) {
   options.accessToken = new AccessToken().fromSerialized(serialized);
 }
-var api = new Api(options);
+var vk = new ApiClient(options);
 
 // Проверка токена
-if (api.accessToken) {
+if (vk.accessToken) {
   console.log("Test access token");
-  api.testAccessToken(function(success) {
+  vk.testAccessToken(function(success) {
     if (success) {
       console.log("Test access token passed");
       showMain();
@@ -70,13 +68,15 @@ if (api.accessToken) {
       showLogin();
     }
   });
+} else {
+  showLogin();
 }
 
 //
 // Аутентификация
 //
-var auth = new Authentication({apiVersion: API_VERSION});
-// var auth = new Authentication(api, {scope: 'nohttps'});
+var auth = new Authentication(vk);
+// var auth = new Authentication(vk, {scope: 'nohttps'});
 var loginForm = gid("login_form");
 var loginCaptchaImage = gid("login_captcha_image");
 var loginCaptchaWrapper = gid("login_captcha_wrapper");
@@ -112,8 +112,7 @@ auth.on('error', function() {
 });
 
 auth.on('success', function() {
-  api.accessToken = new AccessToken().fromResponse(this.response);
-  localStorage.setItem('access_token', api.token.serialize());
+  localStorage.setItem('access_token', vk.accessToken.serialize());
   showMain();
 });
 
@@ -129,18 +128,17 @@ loginForm.addEventListener('submit', function(ev) {
   auth.authenticate(val(loginUsername), val(loginPassword), captchaKey);
 });
 
-api.on('error', function(error) {
-  console.error(error.message);
-  var code = error.code;
-  var request = this.request;
+vk.on('error', function(error) {
+  console.error(error.toString());
+  var code = error.errorCode;
   if (code == ERRORS.USER_AUTHORIZATION_FAILED) {
-    request.stopProcessing();
-    this.cancelAllRequests();
+    this.processing = false;
+    this.cancelApiRequests();
     showLogin();
   } else if (code == ERRORS.CAPTCHA_NEEDED) {
-    request.stopProcessing();
-    request.params.captcha_sid = error.captcha_sid;
-    captchaImage.src = error.captcha_img;
+    this.processing = false;
+    this.apiRequest.params.captcha_sid = error.captchaSid;
+    captchaImage.src = error.captchaImg;
   }
 });
 
@@ -164,15 +162,15 @@ captchaCancelButton.addEventListener('click', function(e) {
   e.preventDefault();
   captchaForm.reset();
   // Я хз как тут поступать надо
-  // api.clearAllRequests();
-  api.request.next();
+  // vk.clearAllRequests();
+  vk.processApiQueue();
   showMain();
 });
 
 captchaForm.addEventListener('submit', function(e) {
   e.preventDefault();
-  api.request.params.captcha_key = getCaptchaCode();
+  vk.apiRequest.params.captcha_key = getCaptchaCode();
   this.reset();
-  api.request.send();
+  vk.processApiRequest();
   showMain();
 });

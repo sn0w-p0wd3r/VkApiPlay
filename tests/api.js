@@ -1,21 +1,21 @@
-var api = new Api();
+var vk = new ApiClient();
 
 // !!!Так не следует делать. Этот пример лишь для демонстрациитого, что запросы
 // отправляются по очереди. Нужно использовать рекурсию.
 for (var i = 1; i <= 10; ++i) {
-  api.call('users.get', function(error, users) {
+  vk.api('users.get', function(error, users) {
     if (error) {
       return;
     }
     var user = users[0];
     console.log("id%s: %s %s", user.id, user.first_name, user.last_name);
-  }, {user_id: i}, i * 1000);
+  }, {user_id: i}, i * 100);
 }
 
 // Капча, приди!
 for (var i = 1; i <= 20; ++i) {
-  api.call('wall.post', function(error, post) {
-      console.log(post);
+  vk.api('wall.post', function(error, post) {
+    console.log(post);
   }, {message: "Test #" + i});
 }
 
