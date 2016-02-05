@@ -86,30 +86,40 @@ function vkUpload(url, files, callback) {
 // Test album:
 // https://vk.com/album-113813852_227532080
 
+// https://github.com/VKCOM/vk-android-sdk/blob/master/vksdk_library/src/main/java/com/vk/sdk/api/photo/VKUploadAlbumPhotoRequest.java
 // Не работает
 // Uploading Photos into User Album
 (function(files, callback, aid, gid) {
   api.call('photos.getUploadServer', function(err, data) {
-    if (err) throw err;
+    if (err) return;
+    console.log("Get upload server:");
     console.log(data);
     vkUpload(data.upload_url, files, function(data) {
+      console.log("Photos save:");
       console.log(data);
+      // Почему возвращает aid, а не album_id?
+      if (!data.album_id) {
+        data.album_id = aid;
+      }
+      if (!data.group_id) {
+        data.group_id = gid;
+      }
       api.call('photos.save', callback, data);
     });
   }, {album_id: aid, group_id: gid});
 })({
-  "file-1": "https://pp.vk.me/c633216/v633216778/f8f6/k9BzDsUwp4w.jpg",
-  "file-2": "https://pp.vk.me/c625719/v625719778/3b4b3/ncXeHH_E5eE.jpg",
+  "photo-1": "https://pp.vk.me/c633216/v633216778/f8f6/k9BzDsUwp4w.jpg",
+  "photo-2": "https://pp.vk.me/c625719/v625719778/3b4b3/ncXeHH_E5eE.jpg",
 }, function(err, data) {
-  if (err) throw err;
+  if (err) return;
   console.log(data);
-}, 227710519, 0);
+}, 227532080, 113813852);
 
 // Работает
 // Uploading Photos on User Wall
 (function(files, callback, gid) {
   api.call('photos.getWallUploadServer', function(err, data) {
-    if (err) throw err;
+    if (err) return;
     vkUpload(data.upload_url, files, function(result) {
       api.call('photos.saveWallPhoto', callback, result);
     });
@@ -117,10 +127,10 @@ function vkUpload(url, files, callback) {
 })({
   photo: "https://pp.vk.me/c633216/v633216778/f8f6/k9BzDsUwp4w.jpg",
 }, function(err, photos) {
-  if (err) throw err;
+  if (err) return;
   var photo = photos[0];
   api.call('wall.post', function(err, post) {
-    if (err) throw err;
+    if (err) return;
     console.log(post);
   }, {
     attachment: template('photo{owner_id}_{id}', photo)

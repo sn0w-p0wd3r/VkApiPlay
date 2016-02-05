@@ -130,6 +130,7 @@ loginForm.addEventListener('submit', function(ev) {
 });
 
 api.on('error', function(error) {
+  console.error(error.message);
   var code = error.code;
   var request = this.request;
   if (code == ERRORS.USER_AUTHORIZATION_FAILED) {
