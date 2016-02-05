@@ -87,7 +87,6 @@ function vkUpload(url, files, callback) {
 // https://vk.com/album-113813852_227532080
 
 // https://github.com/VKCOM/vk-android-sdk/blob/master/vksdk_library/src/main/java/com/vk/sdk/api/photo/VKUploadAlbumPhotoRequest.java
-// Не работает
 // Uploading Photos into User Album
 (function(files, callback, aid, gid) {
   api.call('photos.getUploadServer', function(err, data) {
@@ -108,14 +107,13 @@ function vkUpload(url, files, callback) {
     });
   }, {album_id: aid, group_id: gid});
 })({
-  "photo-1": "https://pp.vk.me/c633216/v633216778/f8f6/k9BzDsUwp4w.jpg",
-  "photo-2": "https://pp.vk.me/c625719/v625719778/3b4b3/ncXeHH_E5eE.jpg",
+  "file1": "https://pp.vk.me/c633216/v633216778/f8f6/k9BzDsUwp4w.jpg",
+  "file2": "https://pp.vk.me/c625719/v625719778/3b4b3/ncXeHH_E5eE.jpg",
 }, function(err, data) {
   if (err) return;
   console.log(data);
 }, 227532080, 113813852);
 
-// Работает
 // Uploading Photos on User Wall
 (function(files, callback, gid) {
   api.call('photos.getWallUploadServer', function(err, data) {
