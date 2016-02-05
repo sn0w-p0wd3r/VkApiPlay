@@ -17,13 +17,14 @@ var API_DELAY = 334;
 
 function Api(options) {
   options = options || {};
-  this.token = options.token;
+  var t = this;
+  t.accessToken = options.accessToken;
   // Дополнительные параметры, которые добавляются к каждому запросу, например,
   // {lang: 'en', https: 1} - возвращаем имена на английском и ссылки на
   // изображения начинающиеся с https вместо http
-  this.extraParams = options.extraParams;
-  this.version = options.version;
-  this.delay = options.delay || API_DELAY;
+  t.extraParams = options.extraParams;
+  t.version = options.version;
+  t.delay = options.delay || API_DELAY;
 }
 
 Api.prototype = {
@@ -32,14 +33,22 @@ Api.prototype = {
   requestTime: 0,
   waiting: false,
 
-  call: function(method, params, options) {
-     var request = new ApiRequest(this, method, params, options);
-     this.requestQueue.push(request);
-     this.processRequestQueue();
+  call: function(method, callback, params, delay) {
+    var request = new ApiRequest(this, method, callback, params, delay);
+    this.requestQueue.push(request);
+    this.processRequestQueue();
   },
 
-  execute: function(code, options) {
-    this.call('execute', {code: code}, options);
+  execute: function(code, callback, delay) {
+    this.call('execute', callback, {code: code}, delay);
+  },
+
+  testAccessToken: function(callback, delay) {
+    this.execute('', function(error) {
+      if (typeof callback == "function") {
+        callback(error === undefined);
+      }
+    }, delay);
   },
 
   cancelAllRequests: function() {
@@ -70,35 +79,33 @@ Api.prototype = {
 
 EventEmitter.mixin(Api);
 
-function ApiRequest(api, method, params, options) {
-  this.api = api;
-  this.method = method;
-  this.params = extend({}, params);
-  options = options || {};
-  this.done = options.done;
-  this.fail = options.fail;
-  this.context = options.context;
-  this.delay = options.delay || this.api.delay;
+function ApiRequest(api, method, callback, params, delay) {
+  var t = this;
+  t.api = api;
+  t.method = method;
+  t.callback = callback;
+  t.params = extend({}, params);
+  t.delay = delay || api.delay;
 }
 
 ApiRequest.prototype = {
-  processResponse: true,
-
-  send: function() {
+  send: function(delay) {
     console.log("Send request");
     var t = this;
+    delay = delay || t.delay;
     t.api.waiting = true;
-    // console.log(t.params);
-    var params = extend({}, t.api.extraParams, t.params);
-    // console.log(params);
+    var params = {};
     if (t.api.version) {
       params.v = t.api.version;
     }
+    // console.log(t.params);
+    extend(params, t.api.extraParams, t.params);
+    // console.log(params);
 
     var scheme = "https";
-    if (t.api.token) {
-      params.access_token = t.api.token.accessToken;
-      if (this.api.token.secret) {
+    if (t.api.accessToken) {
+      params.access_token = t.api.accessToken.accessToken;
+      if (t.api.accessToken.secret) {
         // https://vk.com/dev/api_nohttps
         scheme = "http";
         if (params.sig) {
@@ -109,7 +116,7 @@ ApiRequest.prototype = {
           API_PATH,
           t.method,
           encodeQueryParams(params),
-          t.api.token.secret
+          t.api.accessToken.secret
         );
         params.sig = md5(str);
       }
@@ -117,29 +124,27 @@ ApiRequest.prototype = {
 
     var format = "{0}://{1}{2}{3}";
     var endpoint = formatStr(format, scheme, API_HOST, API_PATH, t.method);
-    var nextRequestTime = t.api.requestTime + t.delay;
+    var nextRequestTime = t.api.requestTime + delay;
     var now = Date.now();
     var timeout = nextRequestTime > now ? nextRequestTime - now : 0;
     console.log("timeout = %sms", timeout);
     setTimeout(function() {
-      post(endpoint, params, function(data) {
+      sendPostRequest(endpoint, function(response) {
         t.api.requestTime = Date.now();
-        var error = data.error;
-        var response = data.response;
+        var error = response.error;
+        t._processing = true;
         if (error) {
-          console.error(t.formatError(error));
+          error = new ApiError(error);
           t.api.emit('error', error);
         }
-        // Мы можем отменить обработку запроса
-        if (t.processResponse) {
-          if (error && typeof t.fail == "function") {
-            t.fail.call(t.context, error);
-          } else if (typeof t.done == "function") {
-            t.done.call(t.context, response);
+        // Можно отменить обработку
+        if (t._processing) {
+          if (typeof t.callback == "function") {
+            t.callback(error, response.response);
           }
           t.next();
         }
-      });
+      }, params);
     }, timeout);
   },
 
@@ -148,41 +153,36 @@ ApiRequest.prototype = {
     this.api.nextRequest();
   },
 
-  // Повторить запрос через миллисекунд
-  retry: function(timeout) {
-    var t = this;
-    t.processResponse = true;
-    setTimeout(function() {
-      t.send();
-    }, timeout || 0);
-  },
-
-  formatError: function(error) {
-    var params = {};
-    for (var i = 0; i < error.request_params.length; ++i) {
-      params[error.request_params[i].key] = error.request_params[i].value;
-    }
-    var method = params.method;
-    delete params.method;
-    return template(
-      '[Error Code: {code}, Message: {msg}]' +
-      ' An error occurred while calling method "{method}"' +
-      ' with parameters: {params}',
-      {
-        code: error.error_code,
-        msg: error.error_msg,
-        method: method,
-        params: this.formatParams(params)
-      }
-    );
-  },
-
-  formatParams: function(params) {
-    return JSON.stringify(params, function(k, v) {
-      if (k == "access_token") {
-        return "**CENSORED**";
-      }
-      return v;
-    });
+  // Я не знаю как назвать эту функцию
+  // Отменяет обработку текущей ошибки и прекращает обработку всех запросов 
+  stopProcessing: function() {
+    this._processing = false;
   },
 };
+
+function ApiError(data) {
+  var t = this;
+  t.name = "ApiError";
+  t.code = data.error_code;
+  var params = {};
+  for (var i = 0; i < data.request_params.length; ++i) {
+    params[data.request_params[i].key] = data.request_params[i].value;
+  }
+  var method = params.method;
+  delete params.method;
+  // Что это такое мне неизвестно
+  // delete params.oauth;
+  t.message = template(
+    '[Error Code: {code}, Message: {msg}]' +
+    ' An error occurred while calling method "{method}"' +
+    ' with parameters: {params}',
+    {
+      code: t.code,
+      msg: data.error_msg,
+      method: method,
+      params: JSON.stringify(params)
+    }
+  );
+}
+
+ApiError.prototype = Error.prototype;

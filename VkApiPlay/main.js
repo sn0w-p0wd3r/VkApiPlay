@@ -55,27 +55,27 @@ each($$('.captcha_image'), function(img) {
 var options = {version: API_VERSION};
 var serialized = localStorage.getItem('access_token');
 if (serialized) {
-  options.token = new AccessToken().fromSerialized(serialized);
+  options.accessToken = new AccessToken().fromSerialized(serialized);
 }
 var api = new Api(options);
 
 // Проверка токена
-if (api.token) {
-  console.log("Test token");
-  api.execute('', {
-    done: function() {
+if (api.accessToken) {
+  console.log("Test access token");
+  api.testAccessToken(function(success) {
+    if (success) {
       console.log("Test access token passed");
       showMain();
+    } else {
+      showLogin();
     }
   });
-} else {
-  showLogin();
 }
 
 //
 // Аутентификация
 //
-var auth = new Authentication({apiVersion: api.version});
+var auth = new Authentication({apiVersion: API_VERSION});
 // var auth = new Authentication(api, {scope: 'nohttps'});
 var loginForm = gid("login_form");
 var loginCaptchaImage = gid("login_captcha_image");
@@ -112,7 +112,7 @@ auth.on('error', function() {
 });
 
 auth.on('success', function() {
-  api.token = new AccessToken().fromResponse(this.response);
+  api.accessToken = new AccessToken().fromResponse(this.response);
   localStorage.setItem('access_token', api.token.serialize());
   showMain();
 });
@@ -130,14 +130,14 @@ loginForm.addEventListener('submit', function(ev) {
 });
 
 api.on('error', function(error) {
-  var code = error.error_code;
+  var code = error.code;
   var request = this.request;
   if (code == ERRORS.USER_AUTHORIZATION_FAILED) {
-    request.processResponse = false;
+    request.stopProcessing();
     this.cancelAllRequests();
     showLogin();
   } else if (code == ERRORS.CAPTCHA_NEEDED) {
-    request.processResponse = false;
+    request.stopProcessing();
     request.params.captcha_sid = error.captcha_sid;
     captchaImage.src = error.captcha_img;
   }
@@ -172,6 +172,6 @@ captchaForm.addEventListener('submit', function(e) {
   e.preventDefault();
   api.request.params.captcha_key = getCaptchaCode();
   this.reset();
-  api.request.retry();
+  api.request.send();
   showMain();
 });

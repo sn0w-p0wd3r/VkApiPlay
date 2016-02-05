@@ -21,7 +21,7 @@ AccessToken.prototype = {
   /*
   var serialized = localStorage.getItem('access_token');
   if (serialized) {
-    var token = new AccessToken().fromSerialized(serialized);
+    var accessToken = new AccessToken().fromSerialized(serialized);
   }
   */
   fromSerialized: function(str) {

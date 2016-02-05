@@ -13,7 +13,7 @@ function clone(obj) {
 function extend(obj) {
   [].slice.call(arguments, 1).forEach(function(src) {
     // Не убирать эту проверку или все сломается
-    if (src == null) {
+    if (!src) {
       return;
     }
     Object.keys(src).forEach(function(key) {
@@ -24,7 +24,7 @@ function extend(obj) {
 }
 
 function each(obj, cb, context) {
-  if (obj == null) {
+  if (!obj) {
     return;
   }
   if (obj.length) {
